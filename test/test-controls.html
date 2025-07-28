@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controls Test - Game of Life</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        .controls-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 300px;
+            z-index: 1000;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .controls-info h3 {
+            margin: 0 0 15px 0;
+            color: #4CAF50;
+        }
+        
+        .controls-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .controls-info li {
+            margin-bottom: 8px;
+        }
+        
+        .controls-info .highlight {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        #hide-info {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        #hide-info:hover {
+            background: #45a049;
+        }
+        
+        .camera-debug {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        
+        .camera-debug h4 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls-info" id="controls-info">
+        <h3>🎮 User Controls Test</h3>
+        <ul>
+            <li><span class="highlight">Left Click & Drag:</span> Paint/toggle cells</li>
+            <li><span class="highlight">Right Click & Drag:</span> Pan the camera</li>
+            <li><span class="highlight">Mouse Wheel:</span> Zoom in/out</li>
+            <li><span class="highlight">Smooth Movement:</span> Camera uses easing</li>
+        </ul>
+        <p><strong>Features:</strong></p>
+        <ul>
+            <li>✅ Mouse coordinate to grid conversion</li>
+            <li>✅ Smooth camera interpolation</li>
+            <li>✅ Zoom limits (0.1x to 10x)</li>
+            <li>✅ Pan with zoom compensation</li>
+            <li>✅ Real-time cell painting</li>
+        </ul>
+        <button id="hide-info">Hide Info</button>
+    </div>
+    
+    <div class="camera-debug" id="camera-debug">
+        <h4>📷 Camera Debug</h4>
+        <div>Position: <span id="cam-pos">0, 0, 10</span></div>
+        <div>Zoom: <span id="cam-zoom">1.00</span>x</div>
+        <div>Grid Size: <span id="grid-size">100 x 100</span></div>
+    </div>
+
+    <script type="module">
+        import * as THREE from '/node_modules/three/build/three.module.js';
+        import { Simulation } from '/src/simulation.js';
+        import { Controls } from '/src/controls.js';
+
+        // Test setup
+        let scene, camera, renderer, simulation, controls;
+        let cellGeometry, cellMaterial, instancedCells;
+        
+        async function init() {
+            // Setup Three.js
+            scene = new THREE.Scene();
+            
+            const aspect = window.innerWidth / window.innerHeight;
+            const frustumSize = 50;
+            camera = new THREE.OrthographicCamera(
+                (frustumSize * aspect) / -2,
+                (frustumSize * aspect) / 2,
+                frustumSize / 2,
+                frustumSize / -2,
+                0.1, 1000
+            );
+            camera.position.z = 10;
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setClearColor(0x001122, 1.0);
+            document.body.appendChild(renderer.domElement);
+            
+            // Setup simulation
+            simulation = new Simulation(100, 100);
+            simulation.initializeRandom(0.15);
+            
+            // Setup controls
+            const dimensions = simulation.getDimensions();
+            controls = new Controls(camera, renderer, simulation, dimensions.width, dimensions.height);
+            
+            // Setup simple cell rendering for testing
+            setupCellRendering();
+            
+            // Setup debug info updates
+            setupDebugInfo();
+            
+            console.log('🎮 Controls test initialized!');
+            console.log('Try: left-click to paint, right-click to pan, wheel to zoom');
+            
+            animate();
+        }
+        
+        function setupCellRendering() {
+            // Simple cell rendering with basic material
+            cellGeometry = new THREE.PlaneGeometry(1, 1);
+            cellMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+            
+            const gridSize = simulation.getDimensions();
+            instancedCells = new THREE.InstancedMesh(
+                cellGeometry, 
+                cellMaterial, 
+                gridSize.width * gridSize.height
+            );
+            
+            scene.add(instancedCells);
+            updateCellInstances();
+        }
+        
+        function updateCellInstances() {
+            const grid = simulation.getGrid();
+            const dimensions = simulation.getDimensions();
+            const matrix = new THREE.Matrix4();
+            let instanceIndex = 0;
+            
+            for (let y = 0; y < dimensions.height; y++) {
+                for (let x = 0; x < dimensions.width; x++) {
+                    const index = y * dimensions.width + x;
+                    const isAlive = grid[index] === 1;
+                    
+                    if (isAlive) {
+                        // Position cells with grid centered at origin
+                        const posX = x - dimensions.width / 2;
+                        const posY = y - dimensions.height / 2;
+                        
+                        matrix.setPosition(posX, posY, 0);
+                        instancedCells.setMatrixAt(instanceIndex, matrix);
+                        instancedCells.setColorAt(instanceIndex, new THREE.Color(0x00ff88));
+                        instanceIndex++;
+                    }
+                }
+            }
+            
+            // Hide unused instances by setting them to zero scale
+            for (let i = instanceIndex; i < instancedCells.count; i++) {
+                matrix.makeScale(0, 0, 0);
+                instancedCells.setMatrixAt(i, matrix);
+            }
+            
+            instancedCells.instanceMatrix.needsUpdate = true;
+            if (instancedCells.instanceColor) {
+                instancedCells.instanceColor.needsUpdate = true;
+            }
+        }
+        
+        function setupDebugInfo() {
+            const camPos = document.getElementById('cam-pos');
+            const camZoom = document.getElementById('cam-zoom');
+            const gridSize = document.getElementById('grid-size');
+            
+            const dimensions = simulation.getDimensions();
+            gridSize.textContent = `${dimensions.width} x ${dimensions.height}`;
+            
+            function updateDebugInfo() {
+                if (controls) {
+                    const pos = controls.getCameraPosition();
+                    const zoom = controls.getZoomLevel();
+                    
+                    camPos.textContent = `${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)}`;
+                    camZoom.textContent = zoom.toFixed(2);
+                }
+            }
+            
+            setInterval(updateDebugInfo, 100); // Update 10 times per second
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update controls for smooth camera movement
+            if (controls) {
+                controls.update();
+            }
+            
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        function onWindowResize() {
+            const aspect = window.innerWidth / window.innerHeight;
+            const frustumSize = 50;
+            
+            camera.left = (frustumSize * aspect) / -2;
+            camera.right = (frustumSize * aspect) / 2;
+            camera.top = frustumSize / 2;
+            camera.bottom = frustumSize / -2;
+            camera.updateProjectionMatrix();
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        window.addEventListener('resize', onWindowResize);
+        
+        // UI event handlers
+        document.getElementById('hide-info').addEventListener('click', () => {
+            document.getElementById('controls-info').style.display = 'none';
+        });
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

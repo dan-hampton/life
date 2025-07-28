@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2.3 - Shader Visual Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000011;
+            color: #4CAF50;
+            font-family: monospace;
+            overflow: hidden;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        
+        .status {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #888;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            z-index: 1000;
+        }
+        
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        
+        button:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <div class="status">🎨 Phase 2.3 - Shader-Based Visuals Demo</div>
+        <div class="description">
+            This demo showcases the beautiful shader-based cell rendering:<br>
+            ✨ Soft glowing circles<br>
+            💫 Rhythmic pulsing (3Hz)<br>
+            🌊 Shimmering wave effects<br>
+            🎆 Additive glow blending<br><br>
+            Zoom with mouse wheel and pan by dragging to explore!
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="resetSimulation()">🔄 Reset</button>
+        <button onclick="pauseResume()">⏯️ Pause/Resume</button>
+        <button onclick="changeColor()">🎨 Change Color</button>
+    </div>
+    
+    <script type="module" src="/src/main.ts"></script>
+    
+    <script>
+        let isPaused = false;
+        let colorIndex = 0;
+        const colors = [
+            [0.0, 1.0, 0.5], // Cyan-green
+            [1.0, 0.2, 0.8], // Hot pink
+            [0.3, 0.8, 1.0], // Sky blue
+            [1.0, 0.8, 0.0], // Gold
+            [0.8, 0.2, 1.0], // Purple
+            [0.0, 1.0, 0.0]  // Pure green
+        ];
+        
+        function resetSimulation() {
+            if (window.simulation) {
+                window.simulation.initializeRandom(0.25);
+                console.log('🔄 Simulation reset with new random pattern');
+            }
+        }
+        
+        function pauseResume() {
+            isPaused = !isPaused;
+            console.log(isPaused ? '⏸️ Simulation paused' : '▶️ Simulation resumed');
+            // You could implement actual pause/resume logic here
+        }
+        
+        function changeColor() {
+            if (window.cellMaterial && window.cellMaterial.uniforms && window.cellMaterial.uniforms.color) {
+                colorIndex = (colorIndex + 1) % colors.length;
+                const newColor = colors[colorIndex];
+                window.cellMaterial.uniforms.color.value.set(newColor[0], newColor[1], newColor[2]);
+                console.log(`🎨 Changed color to [${newColor.join(', ')}]`);
+            }
+        }
+        
+        // Add some interaction feedback
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'r':
+                case 'R':
+                    resetSimulation();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    pauseResume();
+                    break;
+                case 'c':
+                case 'C':
+                    changeColor();
+                    break;
+            }
+        });
+        
+        // Show shader status after initialization
+        setTimeout(() => {
+            if (window.cellMaterial && window.cellMaterial.isShaderMaterial) {
+                console.log('🎉 Shader-based rendering is active!');
+                console.log('✨ Visual effects:');
+                console.log('  - Glowing circles with smoothstep edges');
+                console.log('  - Pulsing animation at 3Hz frequency');
+                console.log('  - Shimmer waves with spatial offset');
+                console.log('  - Additive blending for enhanced glow');
+                
+                // Log current uniforms
+                const uniforms = window.cellMaterial.uniforms;
+                if (uniforms) {
+                    console.log('🔧 Active uniforms:');
+                    Object.keys(uniforms).forEach(key => {
+                        console.log(`  - ${key}: ${uniforms[key].value}`);
+                    });
+                }
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

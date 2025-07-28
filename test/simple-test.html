@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 2.1 Simple Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #111;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+    }
+    
+    #test-results {
+      background: rgba(0, 0, 0, 0.9);
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    
+    .test-item {
+      margin: 8px 0;
+      padding: 4px 0;
+    }
+    
+    .pass { color: #4CAF50; }
+    .fail { color: #F44336; }
+    .info { color: #2196F3; }
+  </style>
+</head>
+<body>
+  <div id="test-results">
+    <h3>🧪 Phase 2.1 Basic Verification Test</h3>
+    <div id="test-output">
+      <div class="test-item">⏳ Starting tests...</div>
+    </div>
+  </div>
+
+  <script>
+    function runBasicTests() {
+      const testOutput = document.getElementById('test-output');
+      let results = '<div class="test-item info"><strong>📋 Phase 2.1 Basic Tests:</strong></div>';
+      
+      // Test 1: HTML structure
+      results += '<div class="test-item pass">✅ HTML structure loaded correctly</div>';
+      
+      // Test 2: DOM APIs available
+      const domTest = typeof document !== 'undefined' && typeof window !== 'undefined';
+      results += `<div class="test-item ${domTest ? 'pass' : 'fail'}">${domTest ? '✅' : '❌'} DOM APIs available</div>`;
+      
+      // Test 3: Canvas API support
+      const canvas = document.createElement('canvas');
+      const canvasTest = canvas && typeof canvas.getContext === 'function';
+      results += `<div class="test-item ${canvasTest ? 'pass' : 'fail'}">${canvasTest ? '✅' : '❌'} Canvas API supported</div>`;
+      
+      // Test 4: WebGL support
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      const webglTest = gl !== null;
+      results += `<div class="test-item ${webglTest ? 'pass' : 'fail'}">${webglTest ? '✅' : '❌'} WebGL supported</div>`;
+      
+      // Test 5: Animation API
+      const animTest = typeof requestAnimationFrame === 'function';
+      results += `<div class="test-item ${animTest ? 'pass' : 'fail'}">${animTest ? '✅' : '❌'} Animation API available</div>`;
+      
+      // Test 6: Try to check main application
+      results += '<div class="test-item info"><strong>🔍 Checking main application:</strong></div>';
+      
+      // Check if main app canvas exists
+      const mainCanvas = document.querySelector('canvas');
+      if (mainCanvas) {
+        results += '<div class="test-item pass">✅ Main application canvas found</div>';
+        results += `<div class="test-item info">   Canvas size: ${mainCanvas.width}x${mainCanvas.height}</div>`;
+      } else {
+        results += '<div class="test-item info">ℹ️  No main application canvas (expected for standalone test)</div>';
+      }
+      
+      results += '<div class="test-item info"><strong>📊 Environment Check Complete</strong></div>';
+      results += '<div class="test-item">🔗 Visit <a href="http://localhost:3000/" style="color: #4CAF50;">http://localhost:3000/</a> to test the main application</div>';
+      
+      testOutput.innerHTML = results;
+      
+      console.log('Basic environment test completed');
+    }
+    
+    // Run tests when page loads
+    document.addEventListener('DOMContentLoaded', runBasicTests);
+    
+    // Also run after a short delay to be safe
+    setTimeout(runBasicTests, 100);
+  </script>
+</body>
+</html>

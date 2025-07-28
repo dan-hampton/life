@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2.4: Animated Cell Transitions Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000011;
+            color: #4CAF50;
+            font-family: monospace;
+            overflow: hidden;
+        }
+        
+        #info-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4CAF50;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        
+        #info-panel h2 {
+            margin-top: 0;
+            color: #00ff88;
+        }
+        
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4CAF50;
+            z-index: 1000;
+        }
+        
+        button {
+            background: #333;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        
+        button:hover {
+            background: #4CAF50;
+            color: #000;
+        }
+        
+        #stats {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4CAF50;
+            z-index: 1000;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info-panel">
+        <h2>🎬 Phase 2.4: Animated Cell Transitions</h2>
+        <p><strong>Testing:</strong></p>
+        <ul>
+            <li>✨ Birth animations (scale up)</li>
+            <li>💀 Death fade-out effects</li>
+            <li>📊 Age-based brightness</li>
+            <li>🎨 Color transitions</li>
+        </ul>
+        <p><strong>Look for:</strong></p>
+        <ul>
+            <li>Cells scaling up when born</li>
+            <li>Orange fade-out when dying</li>
+            <li>Brighter glow on young cells</li>
+        </ul>
+    </div>
+    
+    <div id="controls">
+        <button onclick="testBirthAnimation()">🎬 Test Birth</button>
+        <button onclick="testDeathAnimation()">💀 Test Death</button>
+        <button onclick="resetSimulation()">🔄 Reset</button>
+        <button onclick="pauseSimulation()">⏸️ Pause</button>
+    </div>
+    
+    <div id="stats">
+        <div id="frame-count">Frame: 0</div>
+        <div id="cell-count">Living: 0</div>
+        <div id="dying-count">Dying: 0</div>
+        <div id="young-count">Young: 0</div>
+    </div>
+
+    <script type="module">
+        import * as THREE from '/node_modules/three/build/three.module.js';
+        
+        console.log('🎬 Phase 2.4 Animation Test Starting...');
+        
+        // Test setup
+        let scene, camera, renderer, simulation;
+        let frameCount = 0;
+        let isPaused = false;
+        
+        // Import and initialize
+        import('./src/simulation.js').then(({ Simulation }) => {
+            // Initialize with smaller grid for focused testing
+            simulation = new Simulation(20, 20);
+            setupTestPatterns();
+            startAnimation();
+        });
+        
+        function setupTestPatterns() {
+            // Clear grid first
+            simulation.clear();
+            
+            // Create specific test patterns
+            // Glider pattern for continuous animation
+            simulation.setCellState(5, 5, true);
+            simulation.setCellState(6, 6, true);
+            simulation.setCellState(4, 7, true);
+            simulation.setCellState(5, 7, true);
+            simulation.setCellState(6, 7, true);
+            
+            // Blinker pattern
+            simulation.setCellState(10, 5, true);
+            simulation.setCellState(10, 6, true);
+            simulation.setCellState(10, 7, true);
+            
+            // Block pattern (stable)
+            simulation.setCellState(15, 10, true);
+            simulation.setCellState(16, 10, true);
+            simulation.setCellState(15, 11, true);
+            simulation.setCellState(16, 11, true);
+            
+            updateStats();
+        }
+        
+        function startAnimation() {
+            function animate() {
+                if (!isPaused) {
+                    frameCount++;
+                    document.getElementById('frame-count').textContent = `Frame: ${frameCount}`;
+                    
+                    // Update simulation slower for observation
+                    if (frameCount % 90 === 0) {
+                        simulation.update();
+                        updateStats();
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        
+        function updateStats() {
+            const grid = simulation.getGrid();
+            const ages = simulation.getAges();
+            const dyingCells = simulation.getDyingCells();
+            
+            let livingCount = 0;
+            let youngCount = 0;
+            
+            for (let i = 0; i < grid.length; i++) {
+                if (grid[i] === 1) {
+                    livingCount++;
+                    if (ages[i] <= 5) {
+                        youngCount++;
+                    }
+                }
+            }
+            
+            document.getElementById('cell-count').textContent = `Living: ${livingCount}`;
+            document.getElementById('dying-count').textContent = `Dying: ${dyingCells.size}`;
+            document.getElementById('young-count').textContent = `Young (≤5): ${youngCount}`;
+        }
+        
+        // Test controls
+        window.testBirthAnimation = () => {
+            console.log('🎬 Testing birth animation...');
+            // Add some scattered cells to trigger births
+            for (let i = 0; i < 10; i++) {
+                const x = Math.floor(Math.random() * 20);
+                const y = Math.floor(Math.random() * 20);
+                simulation.setCellState(x, y, true);
+            }
+            updateStats();
+        };
+        
+        window.testDeathAnimation = () => {
+            console.log('💀 Testing death animation...');
+            // Force an update to trigger some deaths
+            simulation.update();
+            updateStats();
+        };
+        
+        window.resetSimulation = () => {
+            console.log('🔄 Resetting simulation...');
+            setupTestPatterns();
+        };
+        
+        window.pauseSimulation = () => {
+            isPaused = !isPaused;
+            const button = document.querySelector('button[onclick="pauseSimulation()"]');
+            button.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
+            console.log(isPaused ? '⏸️ Paused' : '▶️ Resumed');
+        };
+        
+        // Display animation features info
+        setTimeout(() => {
+            console.log('✨ Animation Features Implemented:');
+            console.log('  • Task 38: Cell age tracking');
+            console.log('  • Task 39: Age data passed to shaders');
+            console.log('  • Task 40: Age attribute in vertex shader');
+            console.log('  • Task 41: Scale animation for birth');
+            console.log('  • Task 42: Dying cell tracking');
+            console.log('  • Task 43: Fade-out animation for death');
+        }, 1000);
+    </script>
+</body>
+</html>

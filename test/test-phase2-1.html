@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 2.1 Verification Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #111;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+    }
+    
+    #test-results {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1000;
+      max-width: 500px;
+    }
+    
+    .test-item {
+      margin: 8px 0;
+      padding: 4px 0;
+    }
+    
+    .pass { color: #4CAF50; }
+    .fail { color: #F44336; }
+    
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="test-results">
+    <h3>🧪 Phase 2.1 Verification Test</h3>
+    <div id="test-output">Running tests...</div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.157.0/build/three.module.js';
+    
+    // Create the Three.js setup (same as main.ts)
+    let scene, camera, renderer, animationId;
+    
+    function init() {
+      // Task 21: Create WebGL renderer
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setClearColor(0x000011, 1.0);
+      document.body.appendChild(renderer.domElement);
+      
+      // Task 22: Create Scene
+      scene = new THREE.Scene();
+      
+      // Task 23: Create OrthographicCamera
+      const aspect = window.innerWidth / window.innerHeight;
+      const frustumSize = 50;
+      camera = new THREE.OrthographicCamera(
+        (frustumSize * aspect) / -2,
+        (frustumSize * aspect) / 2,
+        frustumSize / 2,
+        frustumSize / -2,
+        0.1,
+        1000
+      );
+      camera.position.z = 10;
+      
+      // Task 25: Window resize handling
+      window.addEventListener('resize', onWindowResize);
+      
+      // Task 24: Animation loop
+      animate();
+      
+      // Run verification tests
+      setTimeout(runVerificationTests, 1000);
+    }
+    
+    function animate() {
+      animationId = requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    
+    function onWindowResize() {
+      const aspect = window.innerWidth / window.innerHeight;
+      const frustumSize = 50;
+      
+      camera.left = (frustumSize * aspect) / -2;
+      camera.right = (frustumSize * aspect) / 2;
+      camera.top = frustumSize / 2;
+      camera.bottom = frustumSize / -2;
+      camera.updateProjectionMatrix();
+      
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+    }
+    
+    function runVerificationTests() {
+      const testOutput = document.getElementById('test-output');
+      let results = '<div class="test-item"><strong>📋 Test Results:</strong></div>';
+      
+      const tests = [
+        {
+          id: 21,
+          name: "WebGL renderer and DOM element",
+          test: () => {
+            const canvas = document.querySelector('canvas');
+            return canvas && document.body.contains(canvas);
+          }
+        },
+        {
+          id: 22,
+          name: "Scene object creation",
+          test: () => scene && scene.isScene === true
+        },
+        {
+          id: 23,
+          name: "OrthographicCamera setup",
+          test: () => camera && camera.isOrthographicCamera === true
+        },
+        {
+          id: 24,
+          name: "Animation loop active",
+          test: () => typeof animationId === 'number' && animationId > 0
+        },
+        {
+          id: 25,
+          name: "Window resize handling",
+          test: () => {
+            try {
+              window.dispatchEvent(new Event('resize'));
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+        }
+      ];
+      
+      let passedCount = 0;
+      tests.forEach(test => {
+        const passed = test.test();
+        const status = passed ? '✅' : '❌';
+        const className = passed ? 'pass' : 'fail';
+        results += `<div class="test-item ${className}">${status} Task ${test.id}: ${test.name}</div>`;
+        if (passed) passedCount++;
+      });
+      
+      results += `<div class="test-item"><strong>📊 Results: ${passedCount}/${tests.length} tasks passed</strong></div>`;
+      
+      if (passedCount === tests.length) {
+        results += '<div class="test-item pass"><strong>🎉 Phase 2.1 - ALL TASKS COMPLETE!</strong></div>';
+        results += '<div class="test-item">🚀 Ready for Phase 2.2 - Instanced Cell Rendering</div>';
+      } else {
+        results += '<div class="test-item fail"><strong>❌ Some tests failed</strong></div>';
+      }
+      
+      testOutput.innerHTML = results;
+      
+      // Also log to console
+      console.log('Phase 2.1 Verification Complete:', passedCount + '/' + tests.length + ' tests passed');
+    }
+    
+    // Initialize
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2.3 - Shader-Based Visuals Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: #000011;
+            color: #4CAF50;
+        }
+        
+        h1 {
+            color: #00ff88;
+            text-align: center;
+        }
+        
+        .status {
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #333;
+        }
+        
+        .pass { color: #4CAF50; }
+        .fail { color: #f44336; }
+        
+        #canvas-container {
+            margin: 20px 0;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Phase 2.3 - Shader-Based Visuals Test</h1>
+    
+    <div class="status">
+        <h3>Testing Shader Implementation...</h3>
+        <div id="test-results"></div>
+    </div>
+    
+    <div id="canvas-container">
+        <!-- Three.js canvas will be inserted here -->
+    </div>
+    
+    <script type="module" src="/src/main.ts"></script>
+    
+    <script>
+        // Wait for the application to initialize
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('test-results');
+            
+            // Check if the shaders are working
+            const tests = [
+                {
+                    name: "Shader Material Created",
+                    test: () => window.cellMaterial && window.cellMaterial.isShaderMaterial
+                },
+                {
+                    name: "Time Uniform Present", 
+                    test: () => window.cellMaterial && window.cellMaterial.uniforms && window.cellMaterial.uniforms.time
+                },
+                {
+                    name: "Color Uniform Present",
+                    test: () => window.cellMaterial && window.cellMaterial.uniforms && window.cellMaterial.uniforms.color
+                },
+                {
+                    name: "Custom Vertex Shader",
+                    test: () => window.cellMaterial && window.cellMaterial.vertexShader && window.cellMaterial.vertexShader.includes('instanceMatrix')
+                },
+                {
+                    name: "Custom Fragment Shader",
+                    test: () => window.cellMaterial && window.cellMaterial.fragmentShader && window.cellMaterial.fragmentShader.includes('smoothstep')
+                },
+                {
+                    name: "InstancedMesh Uses Shader Material",
+                    test: () => window.instancedCells && window.instancedCells.material === window.cellMaterial
+                },
+                {
+                    name: "Scene Contains InstancedMesh",
+                    test: () => window.scene && window.scene.children.includes(window.instancedCells)
+                }
+            ];
+            
+            let html = '<h4>🔍 Shader Test Results:</h4>';
+            let passCount = 0;
+            
+            tests.forEach(test => {
+                const passed = test.test();
+                const status = passed ? '✅' : '❌';
+                const className = passed ? 'pass' : 'fail';
+                html += `<div class="${className}">${status} ${test.name}</div>`;
+                if (passed) passCount++;
+            });
+            
+            html += `<br><strong>Results: ${passCount}/${tests.length} tests passed</strong>`;
+            
+            if (passCount === tests.length) {
+                html += '<br><div class="pass">🎉 All shader tests passed! Phase 2.3 implementation successful!</div>';
+            } else {
+                html += '<br><div class="fail">❌ Some tests failed. Check the console for details.</div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+            
+            // Test time uniform animation
+            if (window.cellMaterial && window.cellMaterial.uniforms && window.cellMaterial.uniforms.time) {
+                let lastTime = window.cellMaterial.uniforms.time.value;
+                setTimeout(() => {
+                    const newTime = window.cellMaterial.uniforms.time.value;
+                    if (newTime > lastTime) {
+                        resultsDiv.innerHTML += '<div class="pass">✅ Time uniform is animating correctly!</div>';
+                    } else {
+                        resultsDiv.innerHTML += '<div class="fail">❌ Time uniform is not updating</div>';
+                    }
+                }, 1000);
+            }
+            
+        }, 3000); // Wait 3 seconds for everything to initialize
+    </script>
+</body>
+</html>

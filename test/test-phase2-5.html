@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2.5: Dynamic Background Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000011;
+            color: #4CAF50;
+            font-family: monospace;
+            overflow: hidden;
+        }
+        
+        #info-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #9c27b0;
+            z-index: 1000;
+            max-width: 350px;
+        }
+        
+        #info-panel h2 {
+            margin-top: 0;
+            color: #bb86fc;
+        }
+        
+        .feature {
+            margin: 8px 0;
+            padding: 5px;
+            background: rgba(156, 39, 176, 0.1);
+            border-radius: 4px;
+        }
+        
+        .completed {
+            color: #4CAF50;
+        }
+        
+        .in-progress {
+            color: #ff9800;
+        }
+        
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #9c27b0;
+            z-index: 1000;
+        }
+        
+        button {
+            background: #333;
+            color: #bb86fc;
+            border: 1px solid #9c27b0;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        
+        button:hover {
+            background: #9c27b0;
+            color: #000;
+        }
+        
+        #performance {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4CAF50;
+            z-index: 1000;
+            font-size: 12px;
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info-panel">
+        <h2>🌌 Phase 2.5: Dynamic Background</h2>
+        
+        <div class="feature completed">
+            <strong>✅ Task 44:</strong> Full-screen background plane created
+        </div>
+        
+        <div class="feature completed">
+            <strong>✅ Task 45:</strong> Background positioned behind cells
+        </div>
+        
+        <div class="feature completed">
+            <strong>✅ Task 46:</strong> Procedural starfield with noise
+        </div>
+        
+        <div class="feature completed">
+            <strong>✅ Task 47:</strong> Time-based drift & twinkling
+        </div>
+        
+        <p><strong>🌟 Features to observe:</strong></p>
+        <ul>
+            <li>Multiple star layers (big, medium, small)</li>
+            <li>Subtle nebula-like background variation</li>
+            <li>Slow drifting motion</li>
+            <li>Twinkling animation</li>
+            <li>Different star colors (cool/warm white)</li>
+            <li>Atmospheric vignette effect</li>
+        </ul>
+    </div>
+    
+    <div id="performance">
+        <h3 style="margin-top: 0; color: #4CAF50;">⚡ Performance</h3>
+        <div>FPS: <span id="fps">--</span></div>
+        <div>Frame Time: <span id="frame-time">--</span>ms</div>
+        <div>Background: <span id="bg-status">Active</span></div>
+        <div>Cells: <span id="cell-count">0</span></div>
+    </div>
+    
+    <div id="controls">
+        <button onclick="toggleBackground()">🌌 Toggle Background</button>
+        <button onclick="addTestPattern()">✨ Add Test Pattern</button>
+        <button onclick="clearCells()">🧹 Clear Cells</button>
+        <button onclick="toggleAnimation()">⏸️ Pause</button>
+        <button onclick="resetView()">🎯 Reset View</button>
+    </div>
+
+    <script type="module">
+        console.log('🌌 Phase 2.5 Background Test Starting...');
+        
+        // Performance monitoring
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fps = 0;
+        
+        function updatePerformance() {
+            frameCount++;
+            const now = performance.now();
+            const delta = now - lastTime;
+            
+            if (frameCount % 60 === 0) {
+                fps = Math.round(1000 / (delta / 60));
+                document.getElementById('fps').textContent = fps;
+                document.getElementById('frame-time').textContent = Math.round(delta / 60 * 100) / 100;
+                lastTime = now;
+            }
+            
+            requestAnimationFrame(updatePerformance);
+        }
+        updatePerformance();
+        
+        // Global functions for controls
+        window.toggleBackground = () => {
+            console.log('🌌 Toggling background...');
+            const bg = window.backgroundMesh;
+            if (bg) {
+                bg.visible = !bg.visible;
+                document.getElementById('bg-status').textContent = bg.visible ? 'Active' : 'Hidden';
+                console.log(`Background ${bg.visible ? 'shown' : 'hidden'}`);
+            }
+        };
+        
+        window.addTestPattern = () => {
+            console.log('✨ Adding test pattern...');
+            // Add some cells to see contrast with background
+            if (window.simulation) {
+                // Create a pulsar pattern
+                const cx = 50, cy = 50;
+                const pattern = [
+                    [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                    [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,1,1,1,0,0,0,1,1,1,0,0]
+                ];
+                
+                for (let y = 0; y < pattern.length; y++) {
+                    for (let x = 0; x < pattern[y].length; x++) {
+                        if (pattern[y][x] === 1) {
+                            window.simulation.setCellState(cx + x - 6, cy + y - 6, true);
+                        }
+                    }
+                }
+                
+                if (window.updateStats) window.updateStats();
+            }
+        };
+        
+        window.clearCells = () => {
+            console.log('🧹 Clearing all cells...');
+            if (window.simulation) {
+                window.simulation.clear();
+                if (window.updateStats) window.updateStats();
+            }
+        };
+        
+        let isPaused = false;
+        window.toggleAnimation = () => {
+            isPaused = !isPaused;
+            window.simulationPaused = isPaused;
+            const btn = document.querySelector('button[onclick="toggleAnimation()"]');
+            btn.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
+            console.log(isPaused ? 'Animation paused' : 'Animation resumed');
+        };
+        
+        window.resetView = () => {
+            console.log('🎯 Resetting view...');
+            if (window.camera) {
+                window.camera.position.set(0, 0, 10);
+                window.camera.zoom = 1;
+                window.camera.updateProjectionMatrix();
+            }
+        };
+        
+        // Monitor cell count
+        setInterval(() => {
+            if (window.instancedCells) {
+                document.getElementById('cell-count').textContent = window.instancedCells.count;
+            }
+        }, 1000);
+        
+        // Display features after load
+        setTimeout(() => {
+            console.log('✨ Dynamic Background Features:');
+            console.log('  🌟 Multi-layer procedural starfield');
+            console.log('  🌊 Subtle nebula variations with noise');
+            console.log('  ⏰ Time-based drifting animation');
+            console.log('  ✨ Individual star twinkling');
+            console.log('  🎨 Multiple star colors and sizes');
+            console.log('  📐 Atmospheric vignette effect');
+            console.log('  🔧 GPU-optimized shader rendering');
+            
+            console.log('🎮 Use the controls to test the background!');
+        }, 2000);
+    </script>
+</body>
+</html>

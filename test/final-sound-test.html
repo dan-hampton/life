@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Integration Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.4;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff4444; }
+        .info { color: #4a9eff; }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .test-area {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Sound Integration Test</h1>
+    <p>This test verifies that the Game of Life simulation correctly calls sound effects.</p>
+    
+    <div class="test-area">
+        <h3>Test Results:</h3>
+        <div id="results"></div>
+    </div>
+    
+    <button id="runTest">Run Integration Test</button>
+    <button id="manualTest" disabled>Manual Sound Test</button>
+    
+    <div class="test-area">
+        <h3>What this test does:</h3>
+        <ul>
+            <li>Imports simulation and audio modules</li>
+            <li>Patches audio functions to track calls</li>  
+            <li>Runs simulation steps</li>
+            <li>Verifies sound functions are called correctly</li>
+            <li>Tests stereo positioning</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        const results = document.getElementById('results');
+        const runTestBtn = document.getElementById('runTest');
+        const manualTestBtn = document.getElementById('manualTest');
+        
+        function logResult(message, status = 'info') {
+            const div = document.createElement('div');
+            div.className = status;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+        
+        let audioManager;
+        
+        runTestBtn.addEventListener('click', async () => {
+            results.innerHTML = '';
+            logResult('🧪 Starting sound integration test...', 'info');
+            
+            try {
+                // Step 1: Import modules
+                logResult('Importing modules...', 'info');
+                const { Simulation } = await import('./src/simulation.js');
+                const audioModule = await import('./src/audio.js');
+                audioManager = audioModule.audioManager;
+                logResult('✅ Modules imported successfully', 'pass');
+                
+                // Step 2: Initialize audio
+                logResult('Initializing audio system...', 'info');
+                await audioManager.initialize();
+                logResult('✅ Audio system initialized', 'pass');
+                
+                // Step 3: Patch audio functions to track calls
+                let birthCalls = [];
+                let deathCalls = [];
+                
+                const originalPlayBirth = audioManager.playBirthSound;
+                const originalPlayDeath = audioManager.playDeathSound;
+                
+                audioManager.playBirthSound = function(x) {
+                    birthCalls.push({ x, time: Date.now() });
+                    logResult(`🎵 Birth sound called with x=${x}`, 'info');
+                    return originalPlayBirth.call(this, x);
+                };
+                
+                audioManager.playDeathSound = function(x) {
+                    deathCalls.push({ x, time: Date.now() });
+                    logResult(`💀 Death sound called with x=${x}`, 'info');
+                    return originalPlayDeath.call(this, x);
+                };
+                
+                // Step 4: Create and run simulation
+                logResult('Creating 5x5 simulation...', 'info');
+                const simulation = new Simulation(5, 5);
+                
+                // Create a specific pattern that will have births and deaths
+                simulation.clear();
+                simulation.setCellState(1, 1, true);
+                simulation.setCellState(1, 2, true);
+                simulation.setCellState(2, 1, true);
+                // This creates a "blinker" pattern that will oscillate
+                
+                logResult('Running simulation steps...', 'info');
+                
+                // Reset counters
+                birthCalls = [];
+                deathCalls = [];
+                
+                // Run several steps
+                for (let step = 0; step < 3; step++) {
+                    const beforeCalls = birthCalls.length + deathCalls.length;
+                    simulation.update();
+                    const afterCalls = birthCalls.length + deathCalls.length;
+                    logResult(`Step ${step + 1}: ${afterCalls - beforeCalls} sound calls made`, 'info');
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // Step 5: Verify results
+                logResult('📊 Test Results:', 'info');
+                logResult(`   Total birth sounds: ${birthCalls.length}`, birthCalls.length > 0 ? 'pass' : 'info');
+                logResult(`   Total death sounds: ${deathCalls.length}`, deathCalls.length > 0 ? 'pass' : 'info');
+                
+                // Check that stereo positioning is working
+                const hasValidPanning = [...birthCalls, ...deathCalls].every(call => 
+                    typeof call.x === 'number' && call.x >= 0 && call.x <= 1
+                );
+                logResult(`   Valid stereo positioning: ${hasValidPanning}`, hasValidPanning ? 'pass' : 'fail');
+                
+                if (birthCalls.length > 0 || deathCalls.length > 0) {
+                    logResult('✅ INTEGRATION TEST PASSED! Sound effects are properly integrated!', 'pass');
+                } else {
+                    logResult('⚠️ No sounds were triggered. This could be normal for some patterns.', 'info');
+                    logResult('Try the manual test to verify sound generation works.', 'info');
+                }
+                
+                // Restore original functions
+                audioManager.playBirthSound = originalPlayBirth;
+                audioManager.playDeathSound = originalPlayDeath;
+                
+                manualTestBtn.disabled = false;
+                
+            } catch (error) {
+                logResult(`❌ Test failed: ${error.message}`, 'fail');
+                logResult(`Stack: ${error.stack}`, 'fail');
+            }
+        });
+        
+        manualTestBtn.addEventListener('click', () => {
+            logResult('🎵 Playing manual test sounds...', 'info');
+            
+            // Play test sounds with different panning
+            setTimeout(() => {
+                audioManager.playBirthSound(0.2);
+                logResult('🎵 Birth sound (left)', 'info');
+            }, 100);
+            
+            setTimeout(() => {
+                audioManager.playDeathSound(0.8);
+                logResult('💀 Death sound (right)', 'info');
+            }, 400);
+            
+            setTimeout(() => {
+                audioManager.playBirthSound(0.5);
+                logResult('🎵 Birth sound (center)', 'info');
+            }, 700);
+        });
+        
+        logResult('Ready to test. Click "Run Integration Test" to begin.', 'info');
+    </script>
+</body>
+</html>

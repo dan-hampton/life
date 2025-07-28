@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2.2 Test - Instanced Cell Rendering</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: #00ff88;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 400px;
+        }
+        
+        #info h3 {
+            margin: 0 0 10px 0;
+            color: #ffffff;
+        }
+        
+        .task {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .task.pass {
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 3px solid #00ff88;
+        }
+        
+        .task.fail {
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 3px solid #ff4444;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>🎮 Phase 2.2 - Instanced Cell Rendering</h3>
+        <div>Initializing...</div>
+    </div>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import { Simulation } from './src/simulation.js';
+        
+        console.log('🌟 Phase 2.2 Test - Instanced Cell Rendering');
+        
+        // Application state
+        let scene, camera, renderer, simulation;
+        let cellGeometry, cellMaterial, instancedCells;
+        let animationId;
+        
+        function init() {
+            // Setup Three.js
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setClearColor(0x000011, 1.0);
+            document.body.appendChild(renderer.domElement);
+            
+            scene = new THREE.Scene();
+            
+            const aspect = window.innerWidth / window.innerHeight;
+            const frustumSize = 50;
+            camera = new THREE.OrthographicCamera(
+                (frustumSize * aspect) / -2, (frustumSize * aspect) / 2,
+                frustumSize / 2, frustumSize / -2, 0.1, 1000
+            );
+            camera.position.z = 10;
+            
+            // Initialize simulation
+            simulation = new Simulation(50, 50); // Smaller grid for testing
+            simulation.initializeRandom(0.2);
+            
+            // Setup instanced cells
+            setupInstancedCells();
+            
+            // Setup resize handling
+            window.addEventListener('resize', onWindowResize);
+            
+            // Make globally accessible for testing (after setup)
+            window.scene = scene;
+            window.camera = camera;
+            window.cellGeometry = cellGeometry;
+            window.instancedCells = instancedCells;
+            
+            animate();
+            
+            // Run verification after a longer delay to ensure everything is initialized
+            setTimeout(runVerification, 1000);
+        }
+        
+        function setupInstancedCells() {
+            // Task 26: Create PlaneGeometry
+            cellGeometry = new THREE.PlaneGeometry(0.8, 0.8);
+            
+            // Create material
+            cellMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ff88,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            // Task 27: Create InstancedMesh
+            const { width, height } = simulation.getDimensions();
+            const maxInstances = width * height;
+            
+            instancedCells = new THREE.InstancedMesh(cellGeometry, cellMaterial, maxInstances);
+            instancedCells.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+            instancedCells.count = 0; // Initialize to 0 instances
+            
+            scene.add(instancedCells);
+            
+            // Task 28: Initial update
+            updateCellInstances();
+        }
+        
+        function updateCellInstances() {
+            const grid = simulation.getGrid();
+            const { width, height } = simulation.getDimensions();
+            
+            let instanceIndex = 0;
+            const matrix = new THREE.Matrix4();
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cellIndex = y * width + x;
+                    const isAlive = grid[cellIndex] === 1;
+                    
+                    if (isAlive) {
+                        const worldX = x - width / 2 + 0.5;
+                        const worldY = y - height / 2 + 0.5;
+                        
+                        matrix.makeTranslation(worldX, worldY, 0);
+                        instancedCells.setMatrixAt(instanceIndex, matrix);
+                        instanceIndex++;
+                    }
+                }
+            }
+            
+            instancedCells.count = instanceIndex;
+            instancedCells.instanceMatrix.needsUpdate = true;
+        }
+        
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            // Update simulation every 90 frames for slower visualization
+            if (animationId % 90 === 0) {
+                simulation.update();
+                updateCellInstances();
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            const aspect = window.innerWidth / window.innerHeight;
+            const frustumSize = 50;
+            
+            camera.left = (frustumSize * aspect) / -2;
+            camera.right = (frustumSize * aspect) / 2;
+            camera.top = frustumSize / 2;
+            camera.bottom = frustumSize / -2;
+            camera.updateProjectionMatrix();
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function runVerification() {
+            console.log('📋 Phase 2.2 Task Verification Report\n');
+            
+            const tasks = [
+                {
+                    id: 26,
+                    description: "Create PlaneGeometry to serve as base shape for each cell",
+                    verify: () => cellGeometry && cellGeometry.type === 'PlaneGeometry'
+                },
+                {
+                    id: 27,
+                    description: "Create InstancedMesh using plane geometry for single draw call rendering",
+                    verify: () => instancedCells && instancedCells.constructor.name === 'InstancedMesh' && typeof instancedCells.count === 'number'
+                },
+                {
+                    id: 28,
+                    description: "Implement method to update instance matrices based on simulation grid",
+                    verify: () => {
+                        const inScene = scene && scene.children.includes(instancedCells);
+                        const hasInstanceMatrix = instancedCells && instancedCells.instanceMatrix && 
+                                                instancedCells.instanceMatrix.usage === THREE.DynamicDrawUsage;
+                        return inScene && hasInstanceMatrix;
+                    }
+                }
+            ];
+            
+            const infoDiv = document.getElementById('info');
+            let html = '<h3>🎮 Phase 2.2 - Instanced Cell Rendering</h3>';
+            
+            tasks.forEach(task => {
+                const passed = task.verify();
+                const status = passed ? '✅' : '❌';
+                const className = passed ? 'pass' : 'fail';
+                
+                console.log(`${status} Task ${task.id}: ${task.description}`);
+                html += `<div class="task ${className}">${status} Task ${task.id}: ${task.description}</div>`;
+            });
+            
+            const passedCount = tasks.filter(task => task.verify()).length;
+            const resultText = `📊 Results: ${passedCount}/${tasks.length} tasks completed successfully`;
+            console.log(`\n${resultText}`);
+            
+            html += `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #333;">${resultText}</div>`;
+            
+            if (passedCount === tasks.length) {
+                const successText = '🎉 Phase 2.2 - Instanced Cell Rendering: ALL TASKS COMPLETE!';
+                const nextText = '🚀 Ready to proceed to Phase 2.3 - Shader-Based Visuals';
+                console.log(successText);
+                console.log(nextText);
+                
+                html += `<div style="color: #00ff88; font-weight: bold; margin-top: 10px;">${successText}</div>`;
+                html += `<div style="color: #00aaff; margin-top: 5px;">${nextText}</div>`;
+            } else {
+                const failText = '❌ Some tasks failed verification. Please check the implementation.';
+                console.log(failText);
+                html += `<div style="color: #ff4444; font-weight: bold; margin-top: 10px;">${failText}</div>`;
+            }
+            
+            infoDiv.innerHTML = html;
+        }
+        
+        // Initialize the application
+        init();
+    </script>
+</body>
+</html>

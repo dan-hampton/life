@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration Test - Game of Life with Audio</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 20px;
+        }
+        .log { margin: 2px 0; }
+        .error { color: #ff4444; }
+        .success { color: #00ff00; }
+        .info { color: #4a9eff; }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Integration Test: Game of Life + Audio</h1>
+    <button id="startTest">Start Test</button>
+    <div id="log"></div>
+    
+    <script type="module">
+        const log = document.getElementById('log');
+        const startButton = document.getElementById('startTest');
+        
+        function addLog(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(div);
+            console.log(message);
+        }
+        
+        // Capture console errors
+        window.onerror = (msg, url, line, col, error) => {
+            addLog(`❌ JavaScript Error: ${msg} at ${url}:${line}:${col}`, 'error');
+            return false;
+        };
+        
+        window.addEventListener('unhandledrejection', event => {
+            addLog(`❌ Unhandled Promise Rejection: ${event.reason}`, 'error');
+        });
+        
+        startButton.addEventListener('click', async () => {
+            addLog('🧪 Starting integration test...', 'info');
+            
+            try {
+                // Test 1: Import simulation and audio
+                addLog('Importing modules...', 'info');
+                const { Simulation } = await import('./src/simulation.js');
+                const { audioManager } = await import('./src/audio.js');
+                addLog('✅ Modules imported successfully', 'success');
+                
+                // Test 2: Create simulation
+                addLog('Creating simulation (10x10 grid)...', 'info');
+                const simulation = new Simulation(10, 10);
+                simulation.initializeRandom(0.3);
+                addLog('✅ Simulation created and initialized', 'success');
+                
+                // Test 3: Initialize audio
+                addLog('Initializing audio system...', 'info');
+                await audioManager.initialize();
+                addLog('✅ Audio system initialized', 'success');
+                
+                // Test 4: Run simulation steps and listen for sounds
+                addLog('Running 5 simulation steps...', 'info');
+                let totalBirths = 0;
+                let totalDeaths = 0;
+                
+                for (let step = 0; step < 5; step++) {
+                    const gridBefore = new Uint8Array(simulation.getGrid());
+                    simulation.update();
+                    const gridAfter = simulation.getGrid();
+                    
+                    let births = 0;
+                    let deaths = 0;
+                    
+                    for (let i = 0; i < gridBefore.length; i++) {
+                        if (gridBefore[i] === 0 && gridAfter[i] === 1) births++;
+                        if (gridBefore[i] === 1 && gridAfter[i] === 0) deaths++;
+                    }
+                    
+                    totalBirths += births;
+                    totalDeaths += deaths;
+                    
+                    addLog(`Step ${step + 1}: ${births} births, ${deaths} deaths`, 'info');
+                    
+                    // Small delay to hear sounds
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+                
+                addLog(`✅ Test completed! Total: ${totalBirths} births, ${totalDeaths} deaths`, 'success');
+                addLog('🎵 If audio is working, you should have heard synthesized sounds!', 'success');
+                
+                // Test 5: Manual sound test
+                addLog('Playing manual test sounds...', 'info');
+                setTimeout(() => {
+                    audioManager.playBirthSound(0.2);
+                    addLog('🎵 Played birth sound (left)', 'success');
+                }, 500);
+                
+                setTimeout(() => {
+                    audioManager.playDeathSound(0.8);
+                    addLog('🎵 Played death sound (right)', 'success');
+                }, 1000);
+                
+            } catch (error) {
+                addLog(`❌ Test failed: ${error.message}`, 'error');
+                addLog(`❌ Stack: ${error.stack}`, 'error');
+            }
+        });
+        
+        addLog('Ready to test. Click the button to start.', 'info');
+    </script>
+</body>
+</html>
