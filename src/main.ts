@@ -6,7 +6,7 @@ import { Simulation } from './simulation.js';
 import { startDrone, modulateDrone } from './audio.js';
 import { Controls } from './controls.js';
 
-console.log('🌟 Hyper-Modern Game of Life initializing...');
+console.log('🌟 Game of Life initializing...');
 
 // Application state
 let scene: THREE.Scene;
@@ -25,7 +25,7 @@ let ageAttribute: THREE.InstancedBufferAttribute;
 let dyingAttribute: THREE.InstancedBufferAttribute;
 
 // Frame rate control variables
-let targetFrameRate = 20; // Default to 30 FPS
+let targetFrameRate = 15; // Default to 15 FPS
 let lastFrameTime = 0;
 let frameInterval = 1000 / targetFrameRate; // Milliseconds between simulation updates
 
@@ -366,6 +366,7 @@ function addDebugControls() {
     z-index: 1000;
     width: 315px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    pointer-events: auto;
   `;
   
   debugPanel.innerHTML = `
@@ -397,28 +398,28 @@ function addDebugControls() {
       </div>
       <div style="margin-bottom: 8px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;">
-          <span style="font-size: 11px;">Frame Rate: <span id="current-fps" style="color: #ffaa00; font-weight: bold;">20</span> FPS</span>
+          <span style="font-size: 11px;">Frame Rate: <span id="current-fps" style="color: #ffaa00; font-weight: bold;">15</span> FPS</span>
           <div style="display: flex; gap: 2px;">
-            <button id="fps-minus" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 1px 4px; border-radius: 2px; cursor: pointer; font-size: 9px;">−</button>
-            <button id="fps-plus" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 1px 4px; border-radius: 2px; cursor: pointer; font-size: 9px;">+</button>
+        <button id="fps-minus" title="Decrease simulation speed" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 1px 4px; border-radius: 2px; cursor: pointer; font-size: 9px; pointer-events: auto;">−</button>
+        <button id="fps-plus" title="Increase simulation speed" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 1px 4px; border-radius: 2px; cursor: pointer; font-size: 9px; pointer-events: auto;">+</button>
           </div>
         </div>
       </div>
       <div style="display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 6px;">
-        <button id="test-birth" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">🌱 Birth</button>
-        <button id="test-death" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">💀 Death</button>
-        <button id="inject-glider" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">🚀 Glider</button>
+        <button id="test-birth" title="Test cell birth animation" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">🌱 Birth</button>
+        <button id="test-death" title="Test cell death animation" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">💀 Death</button>
+        <button id="inject-glider" title="Inject a glider pattern" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">🚀 Glider</button>
         <div id="sound-status" style="margin-top:8px; color:#4a9eff; font-size:12px;"></div>
-        <button id="toggle-bg" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">🌌 BG</button>
-        <button id="clear-all" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">🧹 Clear</button>
-        <button id="random-cells" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">🎲 Random</button>
-        <button id="pause-sim" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">⏸️ Pause</button>
-        <button id="toggle-autoseed" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">🌱 AutoSeed</button>
-        <button id="toggle-wrapping" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">🌐 Wrap</button>
-        <button id="sim-explainer" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; ">❓ Rules</button>
+        <button id="toggle-bg" title="Toggle animated background" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">🌌 BG</button>
+        <button id="clear-all" title="Clear all cells" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">🧹 Clear</button>
+        <button id="random-cells" title="Randomize cells" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">🎲 Random</button>
+        <button id="pause-sim" title="Pause or resume simulation" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">⏸️ Pause</button>
+        <button id="toggle-autoseed" title="Toggle automatic seeding" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">🌱 AutoSeed</button>
+        <button id="toggle-wrapping" title="Toggle edge wrapping" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto;">🌐 Wrap</button>
+        <button id="sim-explainer" title="Show simulation rules" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; pointer-events: auto; ">❓ Rules</button>
     </div>
   </div>
-  <button id="toggle-debug" style="position: absolute; top: 8px; right: 8px; background: #333; color: #888; border: 1px solid #888; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; min-width: 28px; text-align: center; z-index: 1001;">−</button>
+  <button id="toggle-debug" title="Hide debug panel" style="position: absolute; top: 8px; right: 8px; background: #333; color: #888; border: 1px solid #888; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; min-width: 28px; text-align: center; z-index: 1001; pointer-events: auto;">−</button>
 `;
   document.body.appendChild(debugPanel);
 
@@ -991,7 +992,7 @@ function showSplashScreen() {
     z-index: 10001;
     animation: titleGlow 1.5s ease-in-out infinite;
   `;
-  loader.textContent = '● INITIALIZING SIMULATION...';
+  loader.textContent = '● INITIALISING SIMULATION...';
   splash.appendChild(loader);
   
   document.body.appendChild(splash);
@@ -1029,7 +1030,7 @@ async function init() {
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
   `;
-  statusDiv.textContent = '🎮 Three.js initializing...';
+  statusDiv.textContent = '🎮 Three.js initialising...';
   document.body.appendChild(statusDiv);
   
   // Show status after splash starts fading
@@ -1483,216 +1484,216 @@ document.addEventListener('click', handleFirstUserInteraction, { once: true });
 document.addEventListener('keydown', handleFirstUserInteraction, { once: true });
 document.addEventListener('touchstart', handleFirstUserInteraction, { once: true });
 
-// Run Phase 2.1 verification tests in browser context
-setTimeout(() => {
-  console.log('\n📋 Phase 2.1 Task Verification Report\n');
+// // Run Phase 2.1 verification tests in browser context
+// setTimeout(() => {
+//   console.log('\n📋 Phase 2.1 Task Verification Report\n');
 
-  const tasks = [
-    {
-      id: 21,
-      description: "Create WebGL renderer and append to page body",
-      verify: () => {
-        const canvas = document.querySelector('canvas');
-        return canvas && document.body.contains(canvas);
-      }
-    },
-    {
-      id: 22,
-      description: "Create Scene object",
-      verify: () => {
-        return scene && scene.isScene === true;
-      }
-    },
-    {
-      id: 23,
-      description: "Create OrthographicCamera suitable for 2D view",
-      verify: () => {
-        return camera && camera.isOrthographicCamera === true;
-      }
-    },
-    {
-      id: 24,
-      description: "Create main animation loop using requestAnimationFrame",
-      verify: () => {
-        return typeof animationId === 'number' && animationId > 0;
-      }
-    },
-    {
-      id: 25,
-      description: "Implement basic window resize handling",
-      verify: () => {
-        // Test by dispatching a resize event and checking if handler exists
-        window.dispatchEvent(new Event('resize'));
-        return true; // Handler exists and runs without error
-      }
-    }
-  ];
+//   const tasks = [
+//     {
+//       id: 21,
+//       description: "Create WebGL renderer and append to page body",
+//       verify: () => {
+//         const canvas = document.querySelector('canvas');
+//         return canvas && document.body.contains(canvas);
+//       }
+//     },
+//     {
+//       id: 22,
+//       description: "Create Scene object",
+//       verify: () => {
+//         return scene && scene.isScene === true;
+//       }
+//     },
+//     {
+//       id: 23,
+//       description: "Create OrthographicCamera suitable for 2D view",
+//       verify: () => {
+//         return camera && camera.isOrthographicCamera === true;
+//       }
+//     },
+//     {
+//       id: 24,
+//       description: "Create main animation loop using requestAnimationFrame",
+//       verify: () => {
+//         return typeof animationId === 'number' && animationId > 0;
+//       }
+//     },
+//     {
+//       id: 25,
+//       description: "Implement basic window resize handling",
+//       verify: () => {
+//         // Test by dispatching a resize event and checking if handler exists
+//         window.dispatchEvent(new Event('resize'));
+//         return true; // Handler exists and runs without error
+//       }
+//     }
+//   ];
 
-  tasks.forEach(task => {
-    const passed = task.verify();
-    const status = passed ? '✅' : '❌';
-    console.log(`${status} Task ${task.id}: ${task.description}`);
-  });
+//   tasks.forEach(task => {
+//     const passed = task.verify();
+//     const status = passed ? '✅' : '❌';
+//     console.log(`${status} Task ${task.id}: ${task.description}`);
+//   });
 
-  const passedCount = tasks.filter(task => task.verify()).length;
-  console.log(`\n📊 Results: ${passedCount}/${tasks.length} tasks completed successfully`);
+//   const passedCount = tasks.filter(task => task.verify()).length;
+//   console.log(`\n📊 Results: ${passedCount}/${tasks.length} tasks completed successfully`);
   
-  if (passedCount === tasks.length) {
-    console.log('🎉 Phase 2.1 - Basic Scene Setup: ALL TASKS COMPLETE!');
-    console.log('� Ready to proceed to Phase 2.2 - Instanced Cell Rendering');
-  } else {
-    console.log('❌ Some tasks failed verification. Please check the implementation.');
-  }
-}, 1000);
+//   if (passedCount === tasks.length) {
+//     console.log('🎉 Phase 2.1 - Basic Scene Setup: ALL TASKS COMPLETE!');
+//     console.log('� Ready to proceed to Phase 2.2 - Instanced Cell Rendering');
+//   } else {
+//     console.log('❌ Some tasks failed verification. Please check the implementation.');
+//   }
+// }, 1000);
 
-// Run Phase 2.2 verification tests
-setTimeout(() => {
-  console.log('\n📋 Phase 2.2 Task Verification Report\n');
+// // Run Phase 2.2 verification tests
+// setTimeout(() => {
+//   console.log('\n📋 Phase 2.2 Task Verification Report\n');
   
-  const phase2_2_tasks = [
-    {
-      id: 26,
-      description: "Create PlaneGeometry to serve as base shape for each cell",
-      verify: () => {
-        return cellGeometry && cellGeometry.type === 'PlaneGeometry';
-      }
-    },
-    {
-      id: 27,
-      description: "Create InstancedMesh using plane geometry for single draw call rendering",
-      verify: () => {
-        return instancedCells && instancedCells.constructor.name === 'InstancedMesh' && typeof instancedCells.count === 'number';
-      }
-    },
-    {
-      id: 28,
-      description: "Implement method to update instance matrices based on simulation grid",
-      verify: () => {
-        const inScene = scene && scene.children.includes(instancedCells);
-        const hasInstanceMatrix = instancedCells && instancedCells.instanceMatrix && 
-                                 instancedCells.instanceMatrix.usage === THREE.DynamicDrawUsage;
-        return inScene && hasInstanceMatrix;
-      }
-    }
-  ];
+//   const phase2_2_tasks = [
+//     {
+//       id: 26,
+//       description: "Create PlaneGeometry to serve as base shape for each cell",
+//       verify: () => {
+//         return cellGeometry && cellGeometry.type === 'PlaneGeometry';
+//       }
+//     },
+//     {
+//       id: 27,
+//       description: "Create InstancedMesh using plane geometry for single draw call rendering",
+//       verify: () => {
+//         return instancedCells && instancedCells.constructor.name === 'InstancedMesh' && typeof instancedCells.count === 'number';
+//       }
+//     },
+//     {
+//       id: 28,
+//       description: "Implement method to update instance matrices based on simulation grid",
+//       verify: () => {
+//         const inScene = scene && scene.children.includes(instancedCells);
+//         const hasInstanceMatrix = instancedCells && instancedCells.instanceMatrix && 
+//                                  instancedCells.instanceMatrix.usage === THREE.DynamicDrawUsage;
+//         return inScene && hasInstanceMatrix;
+//       }
+//     }
+//   ];
   
-  phase2_2_tasks.forEach(task => {
-    const passed = task.verify();
-    const status = passed ? '✅' : '❌';
-    console.log(`${status} Task ${task.id}: ${task.description}`);
-  });
+//   phase2_2_tasks.forEach(task => {
+//     const passed = task.verify();
+//     const status = passed ? '✅' : '❌';
+//     console.log(`${status} Task ${task.id}: ${task.description}`);
+//   });
 
-  const passedCount = phase2_2_tasks.filter(task => task.verify()).length;
-  console.log(`\n📊 Results: ${passedCount}/${phase2_2_tasks.length} tasks completed successfully`);
+//   const passedCount = phase2_2_tasks.filter(task => task.verify()).length;
+//   console.log(`\n📊 Results: ${passedCount}/${phase2_2_tasks.length} tasks completed successfully`);
   
-  if (passedCount === phase2_2_tasks.length) {
-    console.log('🎉 Phase 2.2 - Instanced Cell Rendering: ALL TASKS COMPLETE!');
-    console.log('🚀 Ready to proceed to Phase 2.3 - Shader-Based Visuals');
-  } else {
-    console.log('❌ Some tasks failed verification. Please check the implementation.');
-  }
-}, 1500);
+//   if (passedCount === phase2_2_tasks.length) {
+//     console.log('🎉 Phase 2.2 - Instanced Cell Rendering: ALL TASKS COMPLETE!');
+//     console.log('🚀 Ready to proceed to Phase 2.3 - Shader-Based Visuals');
+//   } else {
+//     console.log('❌ Some tasks failed verification. Please check the implementation.');
+//   }
+// }, 1500);
 
-// Run Phase 2.3 verification tests
-setTimeout(() => {
-  console.log('\n📋 Phase 2.3 Task Verification Report\n');
+// // Run Phase 2.3 verification tests
+// setTimeout(() => {
+//   console.log('\n📋 Phase 2.3 Task Verification Report\n');
   
-  const phase2_3_tasks = [
-    {
-      id: 29,
-      description: "Create vertex shader file",
-      verify: () => {
-        // Check if shader material has custom vertex shader
-        return cellMaterial && cellMaterial.isShaderMaterial && 
-               cellMaterial.vertexShader && cellMaterial.vertexShader.includes('instanceMatrix');
-      }
-    },
-    {
-      id: 30,
-      description: "Create fragment shader file", 
-      verify: () => {
-        // Check if shader material has custom fragment shader
-        return cellMaterial && cellMaterial.isShaderMaterial && 
-               cellMaterial.fragmentShader && cellMaterial.fragmentShader.includes('gl_FragColor');
-      }
-    },
-    {
-      id: 31,
-      description: "Pass through instance matrix and camera projection in vertex shader",
-      verify: () => {
-        return cellMaterial && cellMaterial.vertexShader && 
-               cellMaterial.vertexShader.includes('instanceMatrix') &&
-               cellMaterial.vertexShader.includes('projectionMatrix');
-      }
-    },
-    {
-      id: 32,
-      description: "Basic color output in fragment shader",
-      verify: () => {
-        return cellMaterial && cellMaterial.fragmentShader && 
-               cellMaterial.fragmentShader.includes('gl_FragColor');
-      }
-    },
-    {
-      id: 33,
-      description: "Create ShaderMaterial with loaded shaders",
-      verify: () => {
-        return cellMaterial && cellMaterial.isShaderMaterial === true &&
-               cellMaterial.uniforms && typeof cellMaterial.uniforms === 'object';
-      }
-    },
-    {
-      id: 34,
-      description: "Apply ShaderMaterial to InstancedMesh",
-      verify: () => {
-        return instancedCells && instancedCells.material === cellMaterial &&
-               cellMaterial.isShaderMaterial === true;
-      }
-    },
-    {
-      id: 35,
-      description: "Modify fragment shader for soft, glowing circles",
-      verify: () => {
-        return cellMaterial && cellMaterial.fragmentShader && 
-               cellMaterial.fragmentShader.includes('smoothstep') &&
-               (cellMaterial.fragmentShader.includes('circle') || cellMaterial.fragmentShader.includes('dist'));
-      }
-    },
-    {
-      id: 36,
-      description: "Pass time uniform to shaders",
-      verify: () => {
-        return cellMaterial && cellMaterial.uniforms && 
-               cellMaterial.uniforms.time && typeof cellMaterial.uniforms.time.value === 'number';
-      }
-    },
-    {
-      id: 37,
-      description: "Use time uniform for pulsing/shimmering effects",
-      verify: () => {
-        return cellMaterial && cellMaterial.fragmentShader && 
-               cellMaterial.fragmentShader.includes('time') &&
-               (cellMaterial.fragmentShader.includes('pulse') || cellMaterial.fragmentShader.includes('shimmer'));
-      }
-    }
-  ];
+//   const phase2_3_tasks = [
+//     {
+//       id: 29,
+//       description: "Create vertex shader file",
+//       verify: () => {
+//         // Check if shader material has custom vertex shader
+//         return cellMaterial && cellMaterial.isShaderMaterial && 
+//                cellMaterial.vertexShader && cellMaterial.vertexShader.includes('instanceMatrix');
+//       }
+//     },
+//     {
+//       id: 30,
+//       description: "Create fragment shader file", 
+//       verify: () => {
+//         // Check if shader material has custom fragment shader
+//         return cellMaterial && cellMaterial.isShaderMaterial && 
+//                cellMaterial.fragmentShader && cellMaterial.fragmentShader.includes('gl_FragColor');
+//       }
+//     },
+//     {
+//       id: 31,
+//       description: "Pass through instance matrix and camera projection in vertex shader",
+//       verify: () => {
+//         return cellMaterial && cellMaterial.vertexShader && 
+//                cellMaterial.vertexShader.includes('instanceMatrix') &&
+//                cellMaterial.vertexShader.includes('projectionMatrix');
+//       }
+//     },
+//     {
+//       id: 32,
+//       description: "Basic color output in fragment shader",
+//       verify: () => {
+//         return cellMaterial && cellMaterial.fragmentShader && 
+//                cellMaterial.fragmentShader.includes('gl_FragColor');
+//       }
+//     },
+//     {
+//       id: 33,
+//       description: "Create ShaderMaterial with loaded shaders",
+//       verify: () => {
+//         return cellMaterial && cellMaterial.isShaderMaterial === true &&
+//                cellMaterial.uniforms && typeof cellMaterial.uniforms === 'object';
+//       }
+//     },
+//     {
+//       id: 34,
+//       description: "Apply ShaderMaterial to InstancedMesh",
+//       verify: () => {
+//         return instancedCells && instancedCells.material === cellMaterial &&
+//                cellMaterial.isShaderMaterial === true;
+//       }
+//     },
+//     {
+//       id: 35,
+//       description: "Modify fragment shader for soft, glowing circles",
+//       verify: () => {
+//         return cellMaterial && cellMaterial.fragmentShader && 
+//                cellMaterial.fragmentShader.includes('smoothstep') &&
+//                (cellMaterial.fragmentShader.includes('circle') || cellMaterial.fragmentShader.includes('dist'));
+//       }
+//     },
+//     {
+//       id: 36,
+//       description: "Pass time uniform to shaders",
+//       verify: () => {
+//         return cellMaterial && cellMaterial.uniforms && 
+//                cellMaterial.uniforms.time && typeof cellMaterial.uniforms.time.value === 'number';
+//       }
+//     },
+//     {
+//       id: 37,
+//       description: "Use time uniform for pulsing/shimmering effects",
+//       verify: () => {
+//         return cellMaterial && cellMaterial.fragmentShader && 
+//                cellMaterial.fragmentShader.includes('time') &&
+//                (cellMaterial.fragmentShader.includes('pulse') || cellMaterial.fragmentShader.includes('shimmer'));
+//       }
+//     }
+//   ];
   
-  phase2_3_tasks.forEach(task => {
-    const passed = task.verify();
-    const status = passed ? '✅' : '❌';
-    console.log(`${status} Task ${task.id}: ${task.description}`);
-  });
+//   phase2_3_tasks.forEach(task => {
+//     const passed = task.verify();
+//     const status = passed ? '✅' : '❌';
+//     console.log(`${status} Task ${task.id}: ${task.description}`);
+//   });
 
-  const passedCount = phase2_3_tasks.filter(task => task.verify()).length;
-  console.log(`\n📊 Results: ${passedCount}/${phase2_3_tasks.length} tasks completed successfully`);
+//   const passedCount = phase2_3_tasks.filter(task => task.verify()).length;
+//   console.log(`\n📊 Results: ${passedCount}/${phase2_3_tasks.length} tasks completed successfully`);
   
-  if (passedCount === phase2_3_tasks.length) {
-    console.log('🎉 Phase 2.3 - Shader-Based Visuals: ALL TASKS COMPLETE!');
-    console.log('✨ Cells now have beautiful glowing, pulsing, shimmering effects!');
-    console.log('🚀 Ready to proceed to Phase 2.4 - Animated Cell Transitions');
-  } else {
-    console.log('❌ Some tasks failed verification. Please check the implementation.');
-  }
-}, 2000);
+//   if (passedCount === phase2_3_tasks.length) {
+//     console.log('🎉 Phase 2.3 - Shader-Based Visuals: ALL TASKS COMPLETE!');
+//     console.log('✨ Cells now have beautiful glowing, pulsing, shimmering effects!');
+//     console.log('🚀 Ready to proceed to Phase 2.4 - Animated Cell Transitions');
+//   } else {
+//     console.log('❌ Some tasks failed verification. Please check the implementation.');
+//   }
+// }, 2000);
 
-// Add Simulation Explainer button
+// // Add Simulation Explainer button
