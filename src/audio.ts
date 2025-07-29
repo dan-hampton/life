@@ -25,7 +25,7 @@ export function startDrone() {
   droneFilter = droneCtx.createBiquadFilter();
   droneOsc.type = 'sine';
   droneOsc.frequency.value = 55; // A1 (one octave lower)
-  droneGain.gain.value = 0.50; // Quieter
+  droneGain.gain.value = 0.25; // Quieter
   droneFilter.type = 'lowpass';
   droneFilter.frequency.value = 800;
   // Vibrato: slow LFO modulates frequency
@@ -53,8 +53,8 @@ export function modulateDrone(trend: number) {
   const baseFreq = 55; // A1
   const freq = baseFreq + trend * 80; // 55-135 Hz, much wider range
   droneOsc.frequency.setTargetAtTime(freq, droneOsc.context.currentTime, 0.15);
-  const baseCutoff = 600;
-  const cutoff = baseCutoff + trend * 2400; // 600-3000 Hz, much wider range
+  const baseCutoff = 150;
+  const cutoff = baseCutoff + trend * 1200; // 300-3000 Hz, much wider range
   droneFilter.frequency.setTargetAtTime(cutoff, droneOsc.context.currentTime, 0.15);
   // Modulate gain for drama, but only if trend is nonzero
   const baseGain = 0.06;

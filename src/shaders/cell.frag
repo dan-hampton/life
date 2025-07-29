@@ -27,29 +27,34 @@ void main() {
     // Add subtle shimmering effect
     float shimmer = sin(time * 8.0 + dist * 10.0) * 0.1 + 0.9; // Subtle shimmer
     
-    // Task 41: Birth animation - brighter glow for newly born cells
+    // Task 41: Birth animation - neon blue birth with fade to normal color
     float birthGlow = 1.0;
-    if (vAge <= 5.0 && vAge > 0.0) {
-        birthGlow = 1.0 + (5.0 - vAge) * 0.5; // Extra brightness fades over first 5 frames
+    vec3 birthColor = color;
+    if (vAge <= 8.0 && vAge > 0.0) {
+        // Neon blue color for newly born cells
+        vec3 neonBlue = vec3(0.0, 0.8, 2.0); // Bright cyan-blue
+        float birthFactor = (8.0 - vAge) / 8.0; // Fade over 8 frames
+        birthColor = mix(color, neonBlue, birthFactor * 0.8); // Mix with neon blue
+        birthGlow = 1.0 + birthFactor * 1.2; // Extra brightness fades over first 8 frames
     }
     
     // Task 43: Dying animation - fade out effect
     float dyingFade = 1.0;
-    vec3 dyingColor = color;
+    vec3 finalColor = birthColor;
     if (vIsDying > 0.5) {
         dyingFade = 0.3; // Fade to 30% opacity
-        dyingColor = mix(color, vec3(1.0, 0.3, 0.0), 0.7); // Shift to orange-red
+        finalColor = mix(birthColor, vec3(1.0, 0.3, 0.0), 0.7); // Shift to orange-red
     }
     
     // Combine effects
     float intensity = circle * pulse * shimmer * birthGlow * dyingFade;
     
     // Task 32: Output color with glow effect
-    vec3 glowColor = dyingColor * intensity;
+    vec3 glowColor = finalColor * intensity;
     
     // Add outer glow for extra luminosity
     float outerGlow = 1.0 - smoothstep(0.0, 1.2, dist);
-    glowColor += dyingColor * outerGlow * 0.3 * pulse * dyingFade;
+    glowColor += finalColor * outerGlow * 0.3 * pulse * dyingFade;
     
     gl_FragColor = vec4(glowColor, intensity);
 }

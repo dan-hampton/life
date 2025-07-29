@@ -25,7 +25,7 @@ let ageAttribute: THREE.InstancedBufferAttribute;
 let dyingAttribute: THREE.InstancedBufferAttribute;
 
 // Frame rate control variables
-let targetFrameRate = 120; // Default to 60 FPS (full speed)
+let targetFrameRate = 20; // Default to 30 FPS
 let lastFrameTime = 0;
 let frameInterval = 1000 / targetFrameRate; // Milliseconds between simulation updates
 
@@ -364,13 +364,13 @@ function addDebugControls() {
     font-family: monospace;
     font-size: 12px;
     z-index: 1000;
-    width: 310px;
+    width: 315px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   `;
   
   debugPanel.innerHTML = `
     <div id="debug-header" style="display: flex; align-items: center; margin-bottom: 8px; min-width: 180px; width: 100%;">
-      <h3 id="debug-title" style="margin: 0; color: #00ff88; font-size: 14px; flex: 1 1 auto;">👽 Live Stats</h3>
+      <h3 id="debug-title" style="margin: 0; color: #00ff88; font-size: 14px; flex: 1 1 auto;">👽 Control Panel</h3>
     </div>
     <div id="debug-content">
       <div id="stats" style="margin-bottom: 8px;">
@@ -397,7 +397,7 @@ function addDebugControls() {
       </div>
       <div style="margin-bottom: 8px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;">
-          <span style="font-size: 11px;">Frame Rate: <span id="current-fps" style="color: #ffaa00; font-weight: bold;">120</span> FPS</span>
+          <span style="font-size: 11px;">Frame Rate: <span id="current-fps" style="color: #ffaa00; font-weight: bold;">20</span> FPS</span>
           <div style="display: flex; gap: 2px;">
             <button id="fps-minus" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 1px 4px; border-radius: 2px; cursor: pointer; font-size: 9px;">−</button>
             <button id="fps-plus" style="background: #000; color: #4CAF50; border: 1px solid #3a3a3aff; padding: 1px 4px; border-radius: 2px; cursor: pointer; font-size: 9px;">+</button>
@@ -448,17 +448,17 @@ function addDebugControls() {
     explainerContent.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
     explainerContent.innerHTML = [
       '<h2 style="margin-top:0">Conway\'s Game of Life: Simulation Rules</h2>',
-      '<p style="font-size:14px;line-height:1.6;margin-bottom:10px;">',
+      '<p style="font-size:14px;line-height:1.4;margin-bottom:10px;">',
         'The Game of Life is a cellular automaton devised by mathematician John Conway. It simulates the evolution of a grid of cells, each of which can be alive or dead. The state of the grid evolves in discrete steps according to these simple rules:',
       '</p>',
-      '<ol style="padding-left:1.2em;font-size:13px;">',
+      '<ol style="padding-left:1.2em;font-size:13px; line-height:1.6;">',
         '<li><b>Survival:</b> A living cell with 2 or 3 living neighbors remains alive to the next generation.</li>',
         '<li><b>Birth:</b> A dead cell with exactly 3 living neighbors becomes alive (is "born").</li>',
         '<li><b>Death by Isolation:</b> A living cell with fewer than 2 living neighbors dies (underpopulation).</li>',
         '<li><b>Death by Overcrowding:</b> A living cell with more than 3 living neighbors dies (overpopulation).</li>',
         '<li>All other dead cells remain dead.</li>',
       '</ol>',
-      '<p style="font-size:13px;line-height:1.5;">',
+      '<br><p style="font-size:13px;line-height:1.5;">',
         'These rules, though simple, can produce surprisingly complex and beautiful patterns, including oscillators, spaceships, and self-replicating structures. The simulation is entirely deterministic and requires no user input after the initial state is set.',
       '</p>',
       '<button id="close-sim-explainer" style="margin-top:18px;padding:6px 16px;background:#222;color:#fff;border:none;border-radius:4px;cursor:pointer;">Close</button>'
@@ -507,7 +507,7 @@ function addDebugControls() {
         debugTitle.style.visibility = 'visible';
         toggleBtn.textContent = '−';
         toggleBtn.style.color = '#888';
-        debugPanel.style.width = '310px';
+        debugPanel.style.width = '315px';
         debugPanel.style.border = '1px solid #4CAF50';
       }
     }
@@ -791,10 +791,11 @@ function addDebugControls() {
     if (trendEl) {
       // Use smoothed trend for label and color
       const smooth = sparklineData.trendSmooth.length > 0 ? sparklineData.trendSmooth[sparklineData.trendSmooth.length - 1] : 0;
-      let label = 'Flat';
-      if (smooth > 0.05) label = 'Up';
-      else if (smooth < -0.05) label = 'Down';
-      trendEl.textContent = `${label}`;
+      // let label = '➡️';
+      // if (smooth > 0.05) label = '⬆️';
+      // else if (smooth < -0.05) label = '⬇️';
+      //trendEl.textContent = `${label}`;
+      trendEl.textContent = ``
       trendEl.style.color = smooth > 0.05 ? '#00bfff' : smooth < -0.05 ? '#ff6b6b' : '#aaa';
     }
 
@@ -810,8 +811,207 @@ function addDebugControls() {
   setTimeout(updateStats, 1000);
 }
 
+// Cool splash screen with animated Conway's Game of Life title
+function showSplashScreen() {
+  const splash = document.createElement('div');
+  splash.id = 'splash-screen';
+  splash.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 30%, #16213e  60%, #0f0f0f 100%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Orbitron', 'Audiowide', 'Share Tech Mono', monospace;
+    color: #00ff88;
+    animation: splashFadeOut 3s ease-in-out forwards;
+    overflow: hidden;
+  `;
+  
+  // Add Google Fonts for futuristic look
+  const fontLink = document.createElement('link');
+  fontLink.rel = 'stylesheet';
+  fontLink.href = 'https://fonts.googleapis.com/css?family=Orbitron:700&display=swap|Audiowide|Share+Tech+Mono';
+  document.head.appendChild(fontLink);
+
+  // Add CSS animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes splashFadeOut {
+      0% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { opacity: 0; pointer-events: none; }
+    }
+    
+    @keyframes titleGlow {
+      0%, 100% { text-shadow: 0 0 5px #00ff88, 0 0 10px #00ff88, 0 0 15px #00ff88; }
+      50% { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88, 0 0 40px #00ff88; }
+    }
+    
+    @keyframes cellFlicker {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      25% { opacity: 1; transform: scale(1.1); }
+      50% { opacity: 0.8; transform: scale(0.9); }
+      75% { opacity: 1; transform: scale(1.05); }
+    }
+    
+    @keyframes gridLines {
+      0% { opacity: 0.1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 0.1; }
+    }
+    
+    @keyframes subtitleFade {
+      0% { opacity: 0; transform: translateY(20px); }
+      30% { opacity: 0; transform: translateY(20px); }
+      60% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Background grid pattern
+  const gridPattern = document.createElement('div');
+  gridPattern.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      linear-gradient(rgba(0, 255, 136, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 136, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridLines 4s ease-in-out infinite;
+    pointer-events: none;
+  `;
+  splash.appendChild(gridPattern);
+  
+  // Animated cellular automata pattern in background
+  const cellPattern = document.createElement('div');
+  cellPattern.style.cssText = `
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 400px;
+    opacity: 0.15;
+    pointer-events: none;
+  `;
+  
+  // Create animated cells
+  const cellPositions = [
+    [10, 8], [11, 8], [12, 8], // Horizontal line
+    [9, 9], [10, 9], [11, 9], [12, 9], [13, 9], // Longer line
+    [10, 10], [11, 10], [12, 10], // Another line
+    [5, 5], [6, 5], [7, 5], [6, 4], [6, 6], // Cross pattern
+    [20, 12], [21, 12], [22, 12], [21, 11], [21, 13], // Another cross
+    [15, 6], [16, 6], [17, 6], [15, 7], [17, 7], [15, 8], [16, 8], [17, 8] // Block pattern
+  ];
+  
+  cellPositions.forEach(([x, y], index) => {
+    const cell = document.createElement('div');
+    cell.style.cssText = `
+      position: absolute;
+      left: ${x * 20}px;
+      top: ${y * 20}px;
+      width: 16px;
+      height: 16px;
+      background: #00ff88;
+      border-radius: 50%;
+      animation: cellFlicker ${2 + Math.random()}s ease-in-out infinite;
+      animation-delay: ${index * 0.1}s;
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+    `;
+    cellPattern.appendChild(cell);
+  });
+  
+  splash.appendChild(cellPattern);
+  
+  // Main title
+  const title = document.createElement('div');
+  title.style.cssText = `
+    font-size: 4rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1rem;
+    letter-spacing: 0.1em;
+    animation: titleGlow 2s ease-in-out infinite;
+    z-index: 10001;
+    position: relative;
+  `;
+  title.innerHTML = `
+    <div style="margin-bottom: 0.2em;">CONWAY'S</div>
+    <div style="font-size: 3.5rem; color: #40ffaa;">GAME OF LIFE</div>
+  `;
+  splash.appendChild(title);
+  
+  // Subtitle
+  const subtitle = document.createElement('div');
+  subtitle.style.cssText = `
+    font-size: 1.2rem;
+    text-align: center;
+    color: #888;
+    letter-spacing: 0.05em;
+    animation: subtitleFade 3s ease-out forwards;
+    z-index: 10001;
+    position: relative;
+  `;
+  subtitle.textContent = 'HYPER-MODERN CELLULAR AUTOMATON';
+  splash.appendChild(subtitle);
+  
+  // Version info
+  const version = document.createElement('div');
+  version.style.cssText = `
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    font-size: 0.9rem;
+    color: #555;
+    letter-spacing: 0.1em;
+    z-index: 10001;
+  `;
+  version.textContent = 'v3.0 • WebGL Enhanced';
+  splash.appendChild(version);
+  
+  // Loading indicator
+  const loader = document.createElement('div');
+  loader.style.cssText = `
+    position: absolute;
+    bottom: 40px;
+    left: 40px;
+    font-size: 0.9rem;
+    color: #00ff88;
+    z-index: 10001;
+    animation: titleGlow 1.5s ease-in-out infinite;
+  `;
+  loader.textContent = '● INITIALIZING SIMULATION...';
+  splash.appendChild(loader);
+  
+  document.body.appendChild(splash);
+  
+  // Remove splash screen after animation
+  setTimeout(() => {
+    if (splash.parentNode) {
+      splash.remove();
+      style.remove();
+    }
+  }, 4000);
+  
+  console.log('🎬 Splash screen displayed');
+}
+
 async function init() {
   console.log('✨ Setting up Three.js scene...');
+  
+  // Show splash screen first
+  showSplashScreen();
   
   // Add a visual indicator to body to confirm script is running
   document.body.style.background = '#000011';
@@ -826,9 +1026,16 @@ async function init() {
     background: rgba(0,0,0,0.8);
     padding: 10px;
     border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
   `;
   statusDiv.textContent = '🎮 Three.js initializing...';
   document.body.appendChild(statusDiv);
+  
+  // Show status after splash starts fading
+  setTimeout(() => {
+    statusDiv.style.opacity = '1';
+  }, 2800);
   
   // Task 21: Create WebGL renderer and append to page body
   renderer = new THREE.WebGLRenderer({ 
@@ -840,7 +1047,9 @@ async function init() {
   renderer.setClearColor(0x000000, 1.0); // Pure black background to contrast with starfield
   document.body.appendChild(renderer.domElement);
   
-  statusDiv.textContent = '🎮 Renderer created...';
+  setTimeout(() => {
+    statusDiv.textContent = '🎮 Renderer created...';
+  }, 3000);
   console.log('✅ Renderer created and appended to DOM');
   
   // Task 22: Create Scene object
@@ -876,18 +1085,24 @@ async function init() {
   startTime = Date.now();
   
   // Phase 2.3: Setup shader-based rendering
-  statusDiv.textContent = '🎮 Loading shaders...';
+  setTimeout(() => {
+    statusDiv.textContent = '🎮 Loading shaders...';
+  }, 3200);
   await setupShaderBasedCells();
   
   // Task 44-47: Setup dynamic background with procedural starfield
-  statusDiv.textContent = '🌌 Creating starfield background...';
+  setTimeout(() => {
+    statusDiv.textContent = '🌌 Creating starfield background...';
+  }, 3400);
   await setupDynamicBackground();
   
   // Task 25: Window resize handling
   setupResizeHandler();
   
   // Update status
-  statusDiv.textContent = '';
+  setTimeout(() => {
+    statusDiv.textContent = '';
+  }, 4200);
   
   // Add debug controls for testing animations
   addDebugControls();
